@@ -3,6 +3,8 @@ package com.skillinfinity.exception;
 import com.skillinfinity.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -78,5 +80,31 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(
+            BadCredentialsException ex) {
+
+        ApiResponse<Object> response = ApiResponse.<Object>builder()
+                .success(false)
+                .message("Invalid email or password.")
+                .data(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsernameNotFound(
+            UsernameNotFoundException ex) {
+
+        ApiResponse<Object> response = ApiResponse.<Object>builder()
+                .success(false)
+                .message("Invalid email or password.")
+                .data(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 }

@@ -1,8 +1,6 @@
 package com.skillinfinity.controller;
 
-import com.skillinfinity.dto.ApiResponse;
-import com.skillinfinity.dto.RegisterRequestDTO;
-import com.skillinfinity.dto.RegisterResponseDTO;
+import com.skillinfinity.dto.*;
 import com.skillinfinity.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +19,12 @@ public class AuthController {
             @Valid @RequestBody RegisterRequestDTO request) {
 
         return ResponseEntity.ok(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
+            @Valid @RequestBody LoginRequestDTO request) {
+
+        return ResponseEntity.ok(authService.login(request));
     }
 }

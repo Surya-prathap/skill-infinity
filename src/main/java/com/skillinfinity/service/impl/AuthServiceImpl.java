@@ -1,15 +1,16 @@
 package com.skillinfinity.service.impl;
 
-import com.skillinfinity.dto.ApiResponse;
-import com.skillinfinity.dto.RegisterRequestDTO;
-import com.skillinfinity.dto.RegisterResponseDTO;
+import com.skillinfinity.dto.*;
 import com.skillinfinity.entity.User;
 import com.skillinfinity.entity.Wallet;
 import com.skillinfinity.exception.InvalidRequestException;
 import com.skillinfinity.exception.ResourceAlreadyExistsException;
+import com.skillinfinity.exception.ResourceNotFoundException;
 import com.skillinfinity.repository.UserRepository;
 import com.skillinfinity.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public ApiResponse<RegisterResponseDTO> register(RegisterRequestDTO request) {
@@ -61,6 +63,34 @@ public class AuthServiceImpl implements AuthService {
         return ApiResponse.<RegisterResponseDTO>builder()
                 .success(true)
                 .message("Registration successful.")
+                .data(response)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<LoginResponseDTO> login(LoginRequestDTO request) {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        LoginResponseDTO response = LoginResponseDTO.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .token(null)
+                .build();
+
+        return ApiResponse.<LoginResponseDTO>builder()
+                .success(true)
+                .message("Login successful.")
                 .data(response)
                 .build();
     }
