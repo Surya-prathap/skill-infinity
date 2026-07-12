@@ -1,7 +1,7 @@
 package com.skillinfinity.service.impl;
 
-import com.skillinfinity.dto.ApiResponse;
-import com.skillinfinity.dto.SkillResponseDTO;
+import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.response.SkillResponseDTO;
 import com.skillinfinity.entity.Skill;
 import com.skillinfinity.repository.SkillRepository;
 import com.skillinfinity.service.SkillService;

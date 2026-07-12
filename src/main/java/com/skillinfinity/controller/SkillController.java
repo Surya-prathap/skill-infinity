@@ -1,7 +1,7 @@
 package com.skillinfinity.controller;
 
-import com.skillinfinity.dto.ApiResponse;
-import com.skillinfinity.dto.SkillResponseDTO;
+import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.response.SkillResponseDTO;
 import com.skillinfinity.service.SkillService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

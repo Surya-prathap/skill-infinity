@@ -1,6 +1,6 @@
 package com.skillinfinity.exception;
 
-import com.skillinfinity.dto.ApiResponse;
+import com.skillinfinity.dto.common.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;

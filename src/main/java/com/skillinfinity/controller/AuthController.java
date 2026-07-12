@@ -1,6 +1,12 @@
 package com.skillinfinity.controller;
 
-import com.skillinfinity.dto.*;
+import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.request.LoginRequestDTO;
+import com.skillinfinity.dto.request.ProfileUpdateRequestDTO;
+import com.skillinfinity.dto.request.RegisterRequestDTO;
+import com.skillinfinity.dto.response.LoginResponseDTO;
+import com.skillinfinity.dto.response.RegisterResponseDTO;
+import com.skillinfinity.dto.response.UserResponseDTO;
 import com.skillinfinity.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

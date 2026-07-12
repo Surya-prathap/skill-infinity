@@ -1,4 +1,4 @@
-package com.skillinfinity.dto;
+package com.skillinfinity.dto.response;
 
 import lombok.*;
 
@@ -7,8 +7,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RegisterResponseDTO {
+public class LoginResponseDTO {
 
     private UserResponseDTO user;
+
+    private String token;
 
 }

@@ -1,4 +1,4 @@
-package com.skillinfinity.dto;
+package com.skillinfinity.dto.request;
 
 import jakarta.validation.constraints.Size;
 import lombok.*;

@@ -1,4 +1,4 @@
-package com.skillinfinity.dto;
+package com.skillinfinity.dto.response;
 
 import lombok.*;
 

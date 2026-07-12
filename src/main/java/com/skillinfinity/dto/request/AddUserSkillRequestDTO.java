@@ -1,4 +1,4 @@
-package com.skillinfinity.dto;
+package com.skillinfinity.dto.request;
 
 import com.skillinfinity.enums.SkillType;
 import jakarta.validation.constraints.NotNull;

@@ -1,8 +1,8 @@
 package com.skillinfinity.controller;
 
-import com.skillinfinity.dto.AddUserSkillRequestDTO;
-import com.skillinfinity.dto.ApiResponse;
-import com.skillinfinity.dto.UserSkillResponseDTO;
+import com.skillinfinity.dto.request.AddUserSkillRequestDTO;
+import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.response.UserSkillResponseDTO;
 import com.skillinfinity.service.UserSkillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
