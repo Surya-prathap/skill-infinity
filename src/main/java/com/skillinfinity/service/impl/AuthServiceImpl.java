@@ -12,6 +12,8 @@ import com.skillinfinity.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -55,11 +57,14 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        RegisterResponseDTO response = RegisterResponseDTO.builder()
+        UserResponseDTO userResponse = UserResponseDTO.builder()
                 .id(savedUser.getId())
                 .fullName(savedUser.getFullName())
                 .email(savedUser.getEmail())
-                .message("User registered successfully.")
+                .build();
+
+        RegisterResponseDTO response = RegisterResponseDTO.builder()
+                .user(userResponse)
                 .build();
 
         return ApiResponse.<RegisterResponseDTO>builder()
@@ -83,16 +88,83 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found."));
 
-        LoginResponseDTO response = LoginResponseDTO.builder()
+        UserResponseDTO userResponse = UserResponseDTO.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
+                .build();
+
+        LoginResponseDTO response = LoginResponseDTO.builder()
+                .user(userResponse)
                 .token(jwtService.generateToken(user.getEmail()))
                 .build();
 
         return ApiResponse.<LoginResponseDTO>builder()
                 .success(true)
                 .message("Login successful.")
+                .data(response)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<UserResponseDTO> getCurrentUser() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        UserResponseDTO response = UserResponseDTO.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .build();
+
+        return ApiResponse.<UserResponseDTO>builder()
+                .success(true)
+                .message("User fetched successfully.")
+                .data(response)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<UserResponseDTO> updateProfile(ProfileUpdateRequestDTO request) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        user.setBio(request.getBio());
+        user.setProfileImageUrl(request.getProfileImageUrl());
+        user.setCountry(request.getCountry());
+        user.setState(request.getState());
+        user.setCity(request.getCity());
+        user.setTimeZone(request.getTimeZone());
+
+        User updatedUser = userRepository.save(user);
+
+        UserResponseDTO response = UserResponseDTO.builder()
+                .id(updatedUser.getId())
+                .fullName(updatedUser.getFullName())
+                .email(updatedUser.getEmail())
+                .bio(updatedUser.getBio())
+                .profileImageUrl(updatedUser.getProfileImageUrl())
+                .country(updatedUser.getCountry())
+                .state(updatedUser.getState())
+                .city(updatedUser.getCity())
+                .timeZone(updatedUser.getTimeZone())
+                .build();
+
+        return ApiResponse.<UserResponseDTO>builder()
+                .success(true)
+                .message("Profile updated successfully.")
                 .data(response)
                 .build();
     }

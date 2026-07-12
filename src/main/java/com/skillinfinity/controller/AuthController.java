@@ -27,4 +27,17 @@ public class AuthController {
 
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getCurrentUser() {
+
+        return ResponseEntity.ok(authService.getCurrentUser());
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> updateProfile(
+            @Valid @RequestBody ProfileUpdateRequestDTO request) {
+
+        return ResponseEntity.ok(authService.updateProfile(request));
+    }
 }

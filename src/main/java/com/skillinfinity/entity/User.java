@@ -42,10 +42,14 @@ public class User {
     @Column(length = 500)
     private String bio;
 
+    @Column(length = 500)
     private String profileImageUrl;
 
     @Column(length = 50)
     private String country;
+
+    @Column(length = 100)
+    private String state;
 
     @Column(length = 50)
     private String city;
@@ -81,5 +85,6 @@ public class User {
     private Wallet wallet;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<UserSkill> userSkills = new ArrayList<>();
 }

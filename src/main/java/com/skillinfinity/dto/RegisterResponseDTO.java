@@ -9,11 +9,6 @@ import lombok.*;
 @Builder
 public class RegisterResponseDTO {
 
-    private Long id;
+    private UserResponseDTO user;
 
-    private String fullName;
-
-    private String email;
-
-    private String message;
 }
