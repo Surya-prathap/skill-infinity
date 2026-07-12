@@ -10,6 +10,7 @@ import com.skillinfinity.exception.ResourceAlreadyExistsException;
 import com.skillinfinity.repository.UserRepository;
 import com.skillinfinity.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public ApiResponse<RegisterResponseDTO> register(RegisterRequestDTO request) {
@@ -34,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
         Wallet wallet = Wallet.builder()
