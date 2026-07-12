@@ -3,6 +3,7 @@ package com.skillinfinity.entity;
 import com.skillinfinity.enums.SkillCategory;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -27,8 +28,7 @@ public class Skill {
     @Column(nullable = false, unique = true, length = 100)
     private String skillName;
 
-    @NotBlank(message = "Category is required")
-    @Size(max = 50, message = "Category cannot exceed 50 characters")
+    @NotNull(message = "Category is required")
     @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private SkillCategory category;
@@ -40,6 +40,7 @@ public class Skill {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Builder.Default
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserSkill> userSkills = new ArrayList<>();
 }
