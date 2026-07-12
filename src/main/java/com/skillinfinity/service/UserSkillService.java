@@ -14,4 +14,8 @@ public interface UserSkillService {
 
     ApiResponse<Object> deleteSkill(Long id);
 
+    ApiResponse<List<UserSkillResponseDTO>> getLearningSkills();
+
+    ApiResponse<List<UserSkillResponseDTO>> getTeachingSkills();
+
 }

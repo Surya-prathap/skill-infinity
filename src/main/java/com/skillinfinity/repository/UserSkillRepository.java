@@ -14,4 +14,6 @@ public interface UserSkillRepository extends JpaRepository<UserSkill, Long> {
 
     List<UserSkill> findByUser(User user);
 
+    List<UserSkill> findByUserAndSkillType(User user, SkillType skillType);
+
 }

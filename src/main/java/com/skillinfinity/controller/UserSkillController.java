@@ -38,4 +38,16 @@ public class UserSkillController {
         return ResponseEntity.ok(userSkillService.deleteSkill(id));
     }
 
+    @GetMapping("/learn")
+    public ResponseEntity<ApiResponse<List<UserSkillResponseDTO>>> getLearningSkills() {
+
+        return ResponseEntity.ok(userSkillService.getLearningSkills());
+    }
+
+    @GetMapping("/teach")
+    public ResponseEntity<ApiResponse<List<UserSkillResponseDTO>>> getTeachingSkills() {
+
+        return ResponseEntity.ok(userSkillService.getTeachingSkills());
+    }
+
 }

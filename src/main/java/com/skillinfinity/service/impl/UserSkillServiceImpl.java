@@ -6,6 +6,7 @@ import com.skillinfinity.dto.UserSkillResponseDTO;
 import com.skillinfinity.entity.Skill;
 import com.skillinfinity.entity.User;
 import com.skillinfinity.entity.UserSkill;
+import com.skillinfinity.enums.SkillType;
 import com.skillinfinity.exception.InvalidRequestException;
 import com.skillinfinity.exception.ResourceAlreadyExistsException;
 import com.skillinfinity.exception.ResourceNotFoundException;
@@ -131,6 +132,69 @@ public class UserSkillServiceImpl implements UserSkillService {
                 .success(true)
                 .message("Skill removed successfully.")
                 .data(null)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<List<UserSkillResponseDTO>> getLearningSkills() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        List<UserSkill> userSkills =
+                userSkillRepository.findByUserAndSkillType(user, SkillType.LEARN);
+
+        List<UserSkillResponseDTO> response = userSkills.stream()
+                .map(userSkill -> UserSkillResponseDTO.builder()
+                        .id(userSkill.getId())
+                        .skillId(userSkill.getSkill().getId())
+                        .skillName(userSkill.getSkill().getSkillName())
+                        .category(userSkill.getSkill().getCategory())
+                        .skillType(userSkill.getSkillType())
+                        .build())
+                .toList();
+
+        return ApiResponse.<List<UserSkillResponseDTO>>builder()
+                .success(true)
+                .message("Learning skills fetched successfully.")
+                .data(response)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<List<UserSkillResponseDTO>> getTeachingSkills() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        List<UserSkill> userSkills =
+                userSkillRepository.findByUserAndSkillType(user, SkillType.TEACH);
+
+        List<UserSkillResponseDTO> response = userSkills.stream()
+                .map(userSkill -> UserSkillResponseDTO.builder()
+                        .id(userSkill.getId())
+                        .skillId(userSkill.getSkill().getId())
+                        .skillName(userSkill.getSkill().getSkillName())
+                        .category(userSkill.getSkill().getCategory())
+                        .skillType(userSkill.getSkillType())
+                        .build())
+                .toList();
+
+        return ApiResponse.<List<UserSkillResponseDTO>>builder()
+                .success(true)
+                .message("Teaching skills fetched successfully.")
+                .data(response)
                 .build();
     }
 
