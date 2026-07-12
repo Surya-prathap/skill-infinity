@@ -7,6 +7,7 @@ import com.skillinfinity.exception.InvalidRequestException;
 import com.skillinfinity.exception.ResourceAlreadyExistsException;
 import com.skillinfinity.exception.ResourceNotFoundException;
 import com.skillinfinity.repository.UserRepository;
+import com.skillinfinity.security.JwtService;
 import com.skillinfinity.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +24,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     @Override
     public ApiResponse<RegisterResponseDTO> register(RegisterRequestDTO request) {
@@ -85,7 +87,7 @@ public class AuthServiceImpl implements AuthService {
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
-                .token(null)
+                .token(jwtService.generateToken(user.getEmail()))
                 .build();
 
         return ApiResponse.<LoginResponseDTO>builder()
