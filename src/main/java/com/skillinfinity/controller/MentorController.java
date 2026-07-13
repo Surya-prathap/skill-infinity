@@ -1,6 +1,7 @@
 package com.skillinfinity.controller;
 
 import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.response.MentorProfileResponseDTO;
 import com.skillinfinity.dto.response.MentorSearchResponseDTO;
 import com.skillinfinity.service.MentorService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,14 @@ public class MentorController {
             @PathVariable Long skillId) {
 
         return ResponseEntity.ok(mentorService.getMentorsBySkill(skillId));
+    }
+
+    @GetMapping("/{mentorId}")
+    public ResponseEntity<ApiResponse<MentorProfileResponseDTO>> getMentorProfile(
+            @PathVariable Long mentorId) {
+
+        return ResponseEntity.ok(
+                mentorService.getMentorProfile(mentorId));
     }
 
 }

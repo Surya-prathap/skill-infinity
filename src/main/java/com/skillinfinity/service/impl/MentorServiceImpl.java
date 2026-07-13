@@ -1,6 +1,7 @@
 package com.skillinfinity.service.impl;
 
 import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.response.MentorProfileResponseDTO;
 import com.skillinfinity.dto.response.MentorSearchResponseDTO;
 import com.skillinfinity.entity.Skill;
 import com.skillinfinity.entity.User;
@@ -96,5 +97,39 @@ public class MentorServiceImpl implements MentorService {
                 user.getProfileImageUrl() != null &&
                 !user.getProfileImageUrl().isBlank();
     }
+
+    @Override
+    public ApiResponse<MentorProfileResponseDTO> getMentorProfile(Long mentorId) {
+
+        User mentor = userRepository.findById(mentorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Mentor not found."));
+
+        List<UserSkill> teachingSkills = userSkillRepository
+                .findByUserAndSkillType(mentor, SkillType.TEACH);
+
+        List<String> teachingSkillNames = teachingSkills.stream()
+                .map(userSkill -> userSkill.getSkill().getSkillName())
+                .toList();
+
+        MentorProfileResponseDTO response = MentorProfileResponseDTO.builder()
+                .mentorId(mentor.getId())
+                .fullName(mentor.getFullName())
+                .bio(mentor.getBio())
+                .country(mentor.getCountry())
+                .state(mentor.getState())
+                .city(mentor.getCity())
+                .profileImageUrl(mentor.getProfileImageUrl())
+                .teachingSkills(teachingSkillNames)
+                .build();
+
+        return ApiResponse.<MentorProfileResponseDTO>builder()
+                .success(true)
+                .message("Mentor profile fetched successfully.")
+                .data(response)
+                .build();
+    }
+
+
 
 }
