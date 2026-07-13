@@ -42,6 +42,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
 
+        ex.printStackTrace();
+
         ApiResponse<Object> response = ApiResponse.<Object>builder()
                 .success(false)
                 .message("Something went wrong.")

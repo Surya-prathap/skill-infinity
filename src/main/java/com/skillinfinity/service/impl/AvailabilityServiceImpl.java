@@ -79,4 +79,34 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                 responseDTO
         );
     }
+
+    @Override
+    public ApiResponse<List<AvailabilityResponseDTO>> getMyAvailability() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User mentor = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        List<Availability> availabilityList =
+                availabilityRepository.findByMentor(mentor);
+
+        List<AvailabilityResponseDTO> response = availabilityList.stream()
+                .map(availability -> AvailabilityResponseDTO.builder()
+                        .id(availability.getId())
+                        .date(availability.getDate())
+                        .startTime(availability.getStartTime())
+                        .endTime(availability.getEndTime())
+                        .build())
+                .toList();
+
+        return ApiResponse.success(
+                "Availability fetched successfully.",
+                response
+        );
+    }
 }
