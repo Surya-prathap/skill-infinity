@@ -87,4 +87,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UserSkill> userSkills = new ArrayList<>();
+
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Availability> availabilities = new ArrayList<>();
 }

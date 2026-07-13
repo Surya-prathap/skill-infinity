@@ -107,4 +107,13 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
+            IllegalArgumentException ex) {
+
+        return ResponseEntity.badRequest().body(
+                ApiResponse.failure(ex.getMessage())
+        );
+    }
 }
