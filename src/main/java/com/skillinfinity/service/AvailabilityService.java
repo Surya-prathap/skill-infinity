@@ -13,4 +13,10 @@ public interface AvailabilityService {
 
     ApiResponse<List<AvailabilityResponseDTO>> getMyAvailability();
 
+    ApiResponse<AvailabilityResponseDTO> updateAvailability(
+            Long availabilityId,
+            AvailabilityRequestDTO requestDTO);
+
+    ApiResponse<String> deleteAvailability(Long availabilityId);
+
 }

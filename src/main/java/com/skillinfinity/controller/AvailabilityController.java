@@ -33,4 +33,26 @@ public class AvailabilityController {
                 availabilityService.getMyAvailability()
         );
     }
+
+    @PutMapping("/{availabilityId}")
+    public ResponseEntity<ApiResponse<AvailabilityResponseDTO>> updateAvailability(
+            @PathVariable Long availabilityId,
+            @RequestBody AvailabilityRequestDTO requestDTO) {
+
+        return ResponseEntity.ok(
+                availabilityService.updateAvailability(
+                        availabilityId,
+                        requestDTO
+                )
+        );
+    }
+
+    @DeleteMapping("/{availabilityId}")
+    public ResponseEntity<ApiResponse<String>> deleteAvailability(
+            @PathVariable Long availabilityId) {
+
+        return ResponseEntity.ok(
+                availabilityService.deleteAvailability(availabilityId)
+        );
+    }
 }

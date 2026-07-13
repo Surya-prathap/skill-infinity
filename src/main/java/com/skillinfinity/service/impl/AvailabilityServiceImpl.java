@@ -109,4 +109,103 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                 response
         );
     }
+
+    @Override
+    public ApiResponse<AvailabilityResponseDTO> updateAvailability(
+            Long availabilityId,
+            AvailabilityRequestDTO requestDTO) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User mentor = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        Availability availability = availabilityRepository.findById(availabilityId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Availability not found."));
+
+        if (!availability.getMentor().getId().equals(mentor.getId())) {
+            throw new IllegalArgumentException(
+                    "You are not authorized to update this availability.");
+        }
+
+        if (requestDTO.getStartTime().isAfter(requestDTO.getEndTime())
+                || requestDTO.getStartTime().equals(requestDTO.getEndTime())) {
+
+            throw new IllegalArgumentException(
+                    "End time must be greater than start time.");
+        }
+
+        List<Availability> existingSlots =
+                availabilityRepository.findByMentorAndDate(
+                        mentor,
+                        requestDTO.getDate()
+                );
+
+        for (Availability slot : existingSlots) {
+
+            // Ignore the current availability being updated
+            if (slot.getId().equals(availability.getId())) {
+                continue;
+            }
+
+            boolean isOverlapping =
+                    requestDTO.getStartTime().isBefore(slot.getEndTime()) &&
+                            requestDTO.getEndTime().isAfter(slot.getStartTime());
+
+            if (isOverlapping) {
+                throw new IllegalArgumentException(
+                        "Availability overlaps with an existing time slot.");
+            }
+        }
+
+        availability.setDate(requestDTO.getDate());
+        availability.setStartTime(requestDTO.getStartTime());
+        availability.setEndTime(requestDTO.getEndTime());
+
+        availability = availabilityRepository.save(availability);
+
+        AvailabilityResponseDTO responseDTO =
+                AvailabilityResponseDTO.builder()
+                        .id(availability.getId())
+                        .date(availability.getDate())
+                        .startTime(availability.getStartTime())
+                        .endTime(availability.getEndTime())
+                        .build();
+
+        return ApiResponse.success(
+                "Availability updated successfully.",
+                responseDTO
+        );
+    }
+
+    @Override
+    public ApiResponse<String> deleteAvailability(Long availabilityId) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User mentor = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        Availability availability = availabilityRepository.findById(availabilityId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Availability not found."));
+
+        if (!availability.getMentor().getId().equals(mentor.getId())) {
+            throw new IllegalArgumentException(
+                    "You are not authorized to delete this availability.");
+        }
+
+        availabilityRepository.delete(availability);
+
+        return ApiResponse.success("Availability deleted successfully.");
+    }
 }
