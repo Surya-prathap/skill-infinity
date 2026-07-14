@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    List<Booking> findByLearner(User learner);
+    List<Booking> findByLearnerOrderByDateAscStartTimeAsc(User learner);
 
     List<Booking> findByMentor(User mentor);
 
@@ -19,4 +19,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             LocalDate date,
             BookingStatus status
     );
+
+    List<Booking> findByMentorOrderByDateAscStartTimeAsc(User mentor);
+
 }

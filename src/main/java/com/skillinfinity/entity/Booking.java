@@ -49,6 +49,18 @@ public class Booking {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal creditsUsed;
 
+    @Builder.Default
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal purchasedCreditsUsed = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal starterCreditsUsed = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal learningCreditsUsed = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false)
@@ -57,4 +69,5 @@ public class Booking {
     @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
 }

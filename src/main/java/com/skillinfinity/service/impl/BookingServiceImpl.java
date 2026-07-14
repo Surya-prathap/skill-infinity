@@ -1,6 +1,7 @@
 package com.skillinfinity.service.impl;
 
 import com.skillinfinity.dto.common.ApiResponse;
+import com.skillinfinity.dto.common.CreditDeductionResult;
 import com.skillinfinity.dto.request.BookingRequestDTO;
 import com.skillinfinity.dto.response.BookingResponseDTO;
 import com.skillinfinity.entity.*;
@@ -132,7 +133,8 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Insufficient available credits.");
         }
 
-        deductCredits(wallet, creditsUsed);
+        CreditDeductionResult deductionResult =
+                deductCredits(wallet, creditsUsed);
 
         walletRepository.save(wallet);
 
@@ -148,6 +150,15 @@ public class BookingServiceImpl implements BookingService {
                 .startTime(requestDTO.getStartTime())
                 .endTime(endTime)
                 .creditsUsed(creditsUsed)
+                .purchasedCreditsUsed(
+                        deductionResult.getPurchasedCreditsUsed()
+                )
+                .starterCreditsUsed(
+                        deductionResult.getStarterCreditsUsed()
+                )
+                .learningCreditsUsed(
+                        deductionResult.getLearningCreditsUsed()
+                )
                 .build();
 
         booking = bookingRepository.save(booking);
@@ -172,7 +183,205 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
-    private void deductCredits(Wallet wallet, BigDecimal creditsNeeded) {
+    @Override
+    public ApiResponse<List<BookingResponseDTO>> getMyBookings() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User learner = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        List<Booking> bookings =
+                bookingRepository.findByLearnerOrderByDateAscStartTimeAsc(learner);
+
+        List<BookingResponseDTO> response = bookings.stream()
+                .map(booking -> BookingResponseDTO.builder()
+                        .bookingId(booking.getId())
+                        .bookingReference(booking.getBookingReference())
+                        .mentorName(booking.getMentor().getFullName())
+                        .learnerName(booking.getLearner().getFullName())
+                        .skillName(booking.getSkill().getSkillName())
+                        .date(booking.getDate())
+                        .startTime(booking.getStartTime())
+                        .endTime(booking.getEndTime())
+                        .duration(
+                                (int) java.time.Duration.between(
+                                        booking.getStartTime(),
+                                        booking.getEndTime()
+                                ).toMinutes()
+                        )
+                        .creditsUsed(booking.getCreditsUsed())
+                        .status(booking.getStatus())
+                        .build())
+                .toList();
+
+        return ApiResponse.success(
+                "Bookings fetched successfully.",
+                response
+        );
+    }
+
+    @Override
+    public ApiResponse<List<BookingResponseDTO>> getMentorBookings() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User mentor = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        List<Booking> bookings =
+                bookingRepository.findByMentorOrderByDateAscStartTimeAsc(mentor);
+
+        List<BookingResponseDTO> response = bookings.stream()
+                .map(booking -> BookingResponseDTO.builder()
+                        .bookingId(booking.getId())
+                        .bookingReference(booking.getBookingReference())
+                        .mentorName(booking.getMentor().getFullName())
+                        .learnerName(booking.getLearner().getFullName())
+                        .skillName(booking.getSkill().getSkillName())
+                        .date(booking.getDate())
+                        .startTime(booking.getStartTime())
+                        .endTime(booking.getEndTime())
+                        .duration(
+                                (int) java.time.Duration.between(
+                                        booking.getStartTime(),
+                                        booking.getEndTime()
+                                ).toMinutes()
+                        )
+                        .creditsUsed(booking.getCreditsUsed())
+                        .status(booking.getStatus())
+                        .build())
+                .toList();
+
+        return ApiResponse.success(
+                "Mentor bookings fetched successfully.",
+                response
+        );
+    }
+
+    @Override
+    public ApiResponse<BookingResponseDTO> getBookingById(Long bookingId) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Booking not found."));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User loggedInUser = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        if (!booking.getLearner().getId().equals(loggedInUser.getId())
+                && !booking.getMentor().getId().equals(loggedInUser.getId())) {
+
+            throw new IllegalArgumentException(
+                    "You are not authorized to view this booking.");
+        }
+
+        BookingResponseDTO responseDTO = BookingResponseDTO.builder()
+                .bookingId(booking.getId())
+                .bookingReference(booking.getBookingReference())
+                .mentorName(booking.getMentor().getFullName())
+                .learnerName(booking.getLearner().getFullName())
+                .skillName(booking.getSkill().getSkillName())
+                .date(booking.getDate())
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
+                .duration(
+                        (int) java.time.Duration.between(
+                                booking.getStartTime(),
+                                booking.getEndTime()
+                        ).toMinutes()
+                )
+                .creditsUsed(booking.getCreditsUsed())
+                .status(booking.getStatus())
+                .build();
+
+        return ApiResponse.success(
+                "Booking fetched successfully.",
+                responseDTO
+        );
+    }
+
+    @Transactional
+    @Override
+    public ApiResponse<String> cancelBooking(Long bookingId) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Booking not found."));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User learner = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        // Only learner can cancel
+        if (!booking.getLearner().getId().equals(learner.getId())) {
+            throw new IllegalArgumentException(
+                    "Only the learner can cancel this booking.");
+        }
+
+        // Booking must be BOOKED
+        if (booking.getStatus() != BookingStatus.BOOKED) {
+            throw new IllegalArgumentException(
+                    "Only booked sessions can be cancelled.");
+        }
+
+        Wallet wallet = walletRepository.findByUser(learner)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Wallet not found."));
+
+        // Refund exact credits
+        wallet.setPurchasedCredits(
+                wallet.getPurchasedCredits()
+                        .add(booking.getPurchasedCreditsUsed())
+        );
+
+        wallet.setStarterCredits(
+                wallet.getStarterCredits()
+                        .add(booking.getStarterCreditsUsed())
+        );
+
+        wallet.setLearningCredits(
+                wallet.getLearningCredits()
+                        .add(booking.getLearningCreditsUsed())
+        );
+
+        walletRepository.save(wallet);
+
+        booking.setStatus(BookingStatus.CANCELLED);
+
+        bookingRepository.save(booking);
+
+        return ApiResponse.success(
+                "Booking cancelled successfully.",
+                null
+        );
+    }
+
+    private CreditDeductionResult deductCredits(Wallet wallet, BigDecimal creditsNeeded) {
+
+        CreditDeductionResult result = CreditDeductionResult.builder()
+                .purchasedCreditsUsed(BigDecimal.ZERO)
+                .starterCreditsUsed(BigDecimal.ZERO)
+                .learningCreditsUsed(BigDecimal.ZERO)
+                .build();
 
         BigDecimal purchasedCredits = wallet.getPurchasedCredits();
 
@@ -182,10 +391,14 @@ public class BookingServiceImpl implements BookingService {
                     purchasedCredits.subtract(creditsNeeded)
             );
 
-            return;
+            result.setPurchasedCreditsUsed(creditsNeeded);
+
+            return result;
         }
 
         creditsNeeded = creditsNeeded.subtract(purchasedCredits);
+
+        result.setPurchasedCreditsUsed(purchasedCredits);
 
         wallet.setPurchasedCredits(BigDecimal.ZERO);
 
@@ -197,10 +410,14 @@ public class BookingServiceImpl implements BookingService {
                     starterCredits.subtract(creditsNeeded)
             );
 
-            return;
+            result.setStarterCreditsUsed(creditsNeeded);
+
+            return result;
         }
 
         creditsNeeded = creditsNeeded.subtract(starterCredits);
+
+        result.setStarterCreditsUsed(starterCredits);
 
         wallet.setStarterCredits(BigDecimal.ZERO);
 
@@ -209,5 +426,11 @@ public class BookingServiceImpl implements BookingService {
         wallet.setLearningCredits(
                 learningCredits.subtract(creditsNeeded)
         );
+
+        result.setLearningCreditsUsed(creditsNeeded);
+
+        return result;
     }
+
+
 }
