@@ -90,4 +90,10 @@ public class User {
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Availability> availabilities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL)
+    private List<Booking> mentorBookings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "learner", cascade = CascadeType.ALL)
+    private List<Booking> learnerBookings = new ArrayList<>();
 }

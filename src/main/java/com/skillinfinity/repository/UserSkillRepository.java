@@ -7,6 +7,7 @@ import com.skillinfinity.enums.SkillType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserSkillRepository extends JpaRepository<UserSkill, Long> {
 
@@ -17,5 +18,11 @@ public interface UserSkillRepository extends JpaRepository<UserSkill, Long> {
     List<UserSkill> findByUserAndSkillType(User user, SkillType skillType);
 
     List<UserSkill> findBySkillAndSkillType(Skill skill, SkillType skillType);
+
+    Optional<UserSkill> findByUserAndSkillAndSkillType(
+            User user,
+            Skill skill,
+            SkillType skillType
+    );
 
 }
