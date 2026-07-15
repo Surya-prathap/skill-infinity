@@ -375,6 +375,57 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
+    @Transactional
+    @Override
+    public ApiResponse<String> completeBooking(Long bookingId) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Booking not found."));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User mentor = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        // Only mentor can complete the session
+        if (!booking.getMentor().getId().equals(mentor.getId())) {
+            throw new IllegalArgumentException(
+                    "Only the mentor can complete this session.");
+        }
+
+        // Session must be BOOKED
+        if (booking.getStatus() != BookingStatus.BOOKED) {
+            throw new IllegalArgumentException(
+                    "Only booked sessions can be completed.");
+        }
+
+        Wallet wallet = walletRepository.findByUser(mentor)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Wallet not found."));
+
+        // Mentor earns only purchased credits
+        wallet.setWithdrawableCredits(
+                wallet.getWithdrawableCredits()
+                        .add(booking.getPurchasedCreditsUsed())
+        );
+
+        walletRepository.save(wallet);
+
+        booking.setStatus(BookingStatus.COMPLETED);
+
+        bookingRepository.save(booking);
+
+        return ApiResponse.success(
+                "Session completed successfully.",
+                null
+        );
+    }
+
     private CreditDeductionResult deductCredits(Wallet wallet, BigDecimal creditsNeeded) {
 
         CreditDeductionResult result = CreditDeductionResult.builder()

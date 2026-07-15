@@ -59,4 +59,13 @@ public class BookingController {
                 bookingService.cancelBooking(bookingId)
         );
     }
+
+    @PutMapping("/{bookingId}/complete")
+    public ResponseEntity<ApiResponse<String>> completeBooking(
+            @PathVariable Long bookingId) {
+
+        return ResponseEntity.ok(
+                bookingService.completeBooking(bookingId)
+        );
+    }
 }

@@ -19,4 +19,6 @@ public interface BookingService {
 
     ApiResponse<String> cancelBooking(Long bookingId);
 
+    ApiResponse<String> completeBooking(Long bookingId);
+
 }
