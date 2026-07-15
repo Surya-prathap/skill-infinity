@@ -5,11 +5,11 @@ import com.skillinfinity.dto.common.CreditDeductionResult;
 import com.skillinfinity.dto.request.BookingRequestDTO;
 import com.skillinfinity.dto.response.BookingResponseDTO;
 import com.skillinfinity.entity.*;
-import com.skillinfinity.enums.BookingStatus;
-import com.skillinfinity.enums.SkillType;
+import com.skillinfinity.enums.*;
 import com.skillinfinity.exception.ResourceNotFoundException;
 import com.skillinfinity.repository.*;
 import com.skillinfinity.service.BookingService;
+import com.skillinfinity.service.WalletTransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +30,7 @@ public class BookingServiceImpl implements BookingService {
     private final AvailabilityRepository availabilityRepository;
     private final UserSkillRepository userSkillRepository;
     private final WalletRepository walletRepository;
+    private final WalletTransactionService walletTransactionService;
 
     @Transactional
     @Override
@@ -162,6 +163,45 @@ public class BookingServiceImpl implements BookingService {
                 .build();
 
         booking = bookingRepository.save(booking);
+
+        if (deductionResult.getPurchasedCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    learner,
+                    TransactionType.DEBIT,
+                    TransactionCategory.BOOKING,
+                    CreditType.PURCHASED,
+                    deductionResult.getPurchasedCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
+
+        if (deductionResult.getStarterCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    learner,
+                    TransactionType.DEBIT,
+                    TransactionCategory.BOOKING,
+                    CreditType.STARTER,
+                    deductionResult.getStarterCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
+
+        if (deductionResult.getLearningCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    learner,
+                    TransactionType.DEBIT,
+                    TransactionCategory.BOOKING,
+                    CreditType.LEARNING,
+                    deductionResult.getLearningCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
 
         BookingResponseDTO responseDTO = BookingResponseDTO.builder()
                 .bookingId(booking.getId())
@@ -369,6 +409,45 @@ public class BookingServiceImpl implements BookingService {
 
         bookingRepository.save(booking);
 
+        if (booking.getPurchasedCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    learner,
+                    TransactionType.CREDIT,
+                    TransactionCategory.BOOKING_REFUND,
+                    CreditType.PURCHASED,
+                    booking.getPurchasedCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
+
+        if (booking.getStarterCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    learner,
+                    TransactionType.CREDIT,
+                    TransactionCategory.BOOKING_REFUND,
+                    CreditType.STARTER,
+                    booking.getStarterCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
+
+        if (booking.getLearningCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    learner,
+                    TransactionType.CREDIT,
+                    TransactionCategory.BOOKING_REFUND,
+                    CreditType.LEARNING,
+                    booking.getLearningCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
+
         return ApiResponse.success(
                 "Booking cancelled successfully.",
                 null
@@ -419,6 +498,19 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
 
         bookingRepository.save(booking);
+
+        if (booking.getPurchasedCreditsUsed()
+                .compareTo(BigDecimal.ZERO) > 0) {
+
+            walletTransactionService.createTransaction(
+                    mentor,
+                    TransactionType.CREDIT,
+                    TransactionCategory.MENTOR_EARNING,
+                    CreditType.WITHDRAWABLE,
+                    booking.getPurchasedCreditsUsed(),
+                    booking.getBookingReference()
+            );
+        }
 
         return ApiResponse.success(
                 "Session completed successfully.",
