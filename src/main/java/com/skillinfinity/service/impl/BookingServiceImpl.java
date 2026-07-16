@@ -126,7 +126,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Wallet not found."));
 
-        BigDecimal availableCredits = wallet.getStarterCredits()
+        BigDecimal availableCredits = wallet.getWelcomeCredits()
                 .add(wallet.getPurchasedCredits())
                 .add(wallet.getLearningCredits());
 
@@ -154,8 +154,8 @@ public class BookingServiceImpl implements BookingService {
                 .purchasedCreditsUsed(
                         deductionResult.getPurchasedCreditsUsed()
                 )
-                .starterCreditsUsed(
-                        deductionResult.getStarterCreditsUsed()
+                .welcomeCreditsUsed(
+                        deductionResult.getWelcomeCreditsUsed()
                 )
                 .learningCreditsUsed(
                         deductionResult.getLearningCreditsUsed()
@@ -177,7 +177,7 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
-        if (deductionResult.getStarterCreditsUsed()
+        if (deductionResult.getWelcomeCreditsUsed()
                 .compareTo(BigDecimal.ZERO) > 0) {
 
             walletTransactionService.createTransaction(
@@ -185,7 +185,7 @@ public class BookingServiceImpl implements BookingService {
                     TransactionType.DEBIT,
                     TransactionCategory.BOOKING,
                     CreditType.STARTER,
-                    deductionResult.getStarterCreditsUsed(),
+                    deductionResult.getWelcomeCreditsUsed(),
                     booking.getBookingReference()
             );
         }
@@ -393,9 +393,9 @@ public class BookingServiceImpl implements BookingService {
                         .add(booking.getPurchasedCreditsUsed())
         );
 
-        wallet.setStarterCredits(
-                wallet.getStarterCredits()
-                        .add(booking.getStarterCreditsUsed())
+        wallet.setWelcomeCredits(
+                wallet.getWelcomeCredits()
+                        .add(booking.getWelcomeCreditsUsed())
         );
 
         wallet.setLearningCredits(
@@ -422,7 +422,7 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
-        if (booking.getStarterCreditsUsed()
+        if (booking.getWelcomeCreditsUsed()
                 .compareTo(BigDecimal.ZERO) > 0) {
 
             walletTransactionService.createTransaction(
@@ -430,7 +430,7 @@ public class BookingServiceImpl implements BookingService {
                     TransactionType.CREDIT,
                     TransactionCategory.BOOKING_REFUND,
                     CreditType.STARTER,
-                    booking.getStarterCreditsUsed(),
+                    booking.getWelcomeCreditsUsed(),
                     booking.getBookingReference()
             );
         }
@@ -522,7 +522,7 @@ public class BookingServiceImpl implements BookingService {
 
         CreditDeductionResult result = CreditDeductionResult.builder()
                 .purchasedCreditsUsed(BigDecimal.ZERO)
-                .starterCreditsUsed(BigDecimal.ZERO)
+                .welcomeCreditsUsed(BigDecimal.ZERO)
                 .learningCreditsUsed(BigDecimal.ZERO)
                 .build();
 
@@ -545,24 +545,24 @@ public class BookingServiceImpl implements BookingService {
 
         wallet.setPurchasedCredits(BigDecimal.ZERO);
 
-        BigDecimal starterCredits = wallet.getStarterCredits();
+        BigDecimal welcomeCredits = wallet.getWelcomeCredits();
 
-        if (starterCredits.compareTo(creditsNeeded) >= 0) {
+        if (welcomeCredits.compareTo(creditsNeeded) >= 0) {
 
-            wallet.setStarterCredits(
-                    starterCredits.subtract(creditsNeeded)
+            wallet.setWelcomeCredits(
+                    welcomeCredits.subtract(creditsNeeded)
             );
 
-            result.setStarterCreditsUsed(creditsNeeded);
+            result.setWelcomeCreditsUsed(creditsNeeded);
 
             return result;
         }
 
-        creditsNeeded = creditsNeeded.subtract(starterCredits);
+        creditsNeeded = creditsNeeded.subtract(welcomeCredits);
 
-        result.setStarterCreditsUsed(starterCredits);
+        result.setWelcomeCreditsUsed(welcomeCredits);
 
-        wallet.setStarterCredits(BigDecimal.ZERO);
+        wallet.setWelcomeCredits(BigDecimal.ZERO);
 
         BigDecimal learningCredits = wallet.getLearningCredits();
 

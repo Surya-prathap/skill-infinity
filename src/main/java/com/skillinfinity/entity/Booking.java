@@ -55,7 +55,7 @@ public class Booking {
 
     @Builder.Default
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal starterCreditsUsed = BigDecimal.ZERO;
+    private BigDecimal welcomeCreditsUsed = BigDecimal.ZERO;
 
     @Builder.Default
     @Column(nullable = false, precision = 10, scale = 2)

@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Builder
 public class WalletResponseDTO {
 
-    private BigDecimal starterCredits;
+    private BigDecimal welcomeCredits;
 
     private BigDecimal purchasedCredits;
 

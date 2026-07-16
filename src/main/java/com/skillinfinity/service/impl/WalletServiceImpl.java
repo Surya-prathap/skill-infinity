@@ -45,12 +45,12 @@ public class WalletServiceImpl implements WalletService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Wallet not found."));
 
-        BigDecimal availableCredits = wallet.getStarterCredits()
+        BigDecimal availableCredits = wallet.getWelcomeCredits()
                 .add(wallet.getPurchasedCredits())
                 .add(wallet.getLearningCredits());
 
         WalletResponseDTO responseDTO = WalletResponseDTO.builder()
-                .starterCredits(wallet.getStarterCredits())
+                .welcomeCredits(wallet.getWelcomeCredits())
                 .purchasedCredits(wallet.getPurchasedCredits())
                 .learningCredits(wallet.getLearningCredits())
                 .withdrawableCredits(wallet.getWithdrawableCredits())
@@ -99,7 +99,7 @@ public class WalletServiceImpl implements WalletService {
         );
 
         WalletResponseDTO responseDTO = WalletResponseDTO.builder()
-                .starterCredits(wallet.getStarterCredits())
+                .welcomeCredits(wallet.getWelcomeCredits())
                 .purchasedCredits(wallet.getPurchasedCredits())
                 .learningCredits(wallet.getLearningCredits())
                 .withdrawableCredits(wallet.getWithdrawableCredits())

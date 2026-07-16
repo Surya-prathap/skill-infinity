@@ -20,7 +20,7 @@ public class Wallet {
 
     @Builder.Default
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal starterCredits = BigDecimal.ZERO;
+    private BigDecimal welcomeCredits = BigDecimal.ZERO;
 
     @Builder.Default
     @Column(nullable = false, precision = 10, scale = 2)

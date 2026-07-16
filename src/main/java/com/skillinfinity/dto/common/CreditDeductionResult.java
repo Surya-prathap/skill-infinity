@@ -13,7 +13,7 @@ public class CreditDeductionResult {
 
     private BigDecimal purchasedCreditsUsed;
 
-    private BigDecimal starterCreditsUsed;
+    private BigDecimal welcomeCreditsUsed;
 
     private BigDecimal learningCreditsUsed;
 }

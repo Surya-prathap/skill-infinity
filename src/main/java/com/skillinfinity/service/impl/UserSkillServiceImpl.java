@@ -3,6 +3,7 @@ package com.skillinfinity.service.impl;
 import com.skillinfinity.dto.request.AddUserSkillRequestDTO;
 import com.skillinfinity.dto.common.ApiResponse;
 import com.skillinfinity.dto.response.UserSkillResponseDTO;
+import com.skillinfinity.entity.MentorProfile;
 import com.skillinfinity.entity.Skill;
 import com.skillinfinity.entity.User;
 import com.skillinfinity.entity.UserSkill;
@@ -10,6 +11,7 @@ import com.skillinfinity.enums.SkillType;
 import com.skillinfinity.exception.InvalidRequestException;
 import com.skillinfinity.exception.ResourceAlreadyExistsException;
 import com.skillinfinity.exception.ResourceNotFoundException;
+import com.skillinfinity.repository.MentorProfileRepository;
 import com.skillinfinity.repository.SkillRepository;
 import com.skillinfinity.repository.UserRepository;
 import com.skillinfinity.repository.UserSkillRepository;
@@ -28,6 +30,7 @@ public class UserSkillServiceImpl implements UserSkillService {
     private final UserRepository userRepository;
     private final SkillRepository skillRepository;
     private final UserSkillRepository userSkillRepository;
+    private final MentorProfileRepository mentorProfileRepository;
 
     @Override
     public ApiResponse<UserSkillResponseDTO> addSkill(AddUserSkillRequestDTO request) {
@@ -60,6 +63,21 @@ public class UserSkillServiceImpl implements UserSkillService {
                 .build();
 
         UserSkill saved = userSkillRepository.save(userSkill);
+
+        if (saved.getSkillType() == SkillType.TEACH) {
+
+            boolean mentorProfileExists =
+                    mentorProfileRepository.findByUser(user).isPresent();
+
+            if (!mentorProfileExists) {
+
+                MentorProfile mentorProfile = MentorProfile.builder()
+                        .user(user)
+                        .build();
+
+                mentorProfileRepository.save(mentorProfile);
+            }
+        }
 
         UserSkillResponseDTO response = UserSkillResponseDTO.builder()
                 .id(saved.getId())

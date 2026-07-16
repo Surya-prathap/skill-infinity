@@ -7,11 +7,14 @@ import com.skillinfinity.dto.request.RegisterRequestDTO;
 import com.skillinfinity.dto.response.LoginResponseDTO;
 import com.skillinfinity.dto.response.RegisterResponseDTO;
 import com.skillinfinity.dto.response.UserResponseDTO;
+import com.skillinfinity.entity.MentorProfile;
 import com.skillinfinity.entity.User;
 import com.skillinfinity.entity.Wallet;
+import com.skillinfinity.enums.Role;
 import com.skillinfinity.exception.InvalidRequestException;
 import com.skillinfinity.exception.ResourceAlreadyExistsException;
 import com.skillinfinity.exception.ResourceNotFoundException;
+import com.skillinfinity.repository.MentorProfileRepository;
 import com.skillinfinity.repository.UserRepository;
 import com.skillinfinity.security.JwtService;
 import com.skillinfinity.service.AuthService;
@@ -33,6 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final MentorProfileRepository mentorProfileRepository;
 
     @Override
     public ApiResponse<RegisterResponseDTO> register(RegisterRequestDTO request) {
@@ -52,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         Wallet wallet = Wallet.builder()
-                .starterCredits(BigDecimal.valueOf(5))
+                .welcomeCredits(BigDecimal.valueOf(3))
                 .learningCredits(BigDecimal.ZERO)
                 .purchasedCredits(BigDecimal.ZERO)
                 .withdrawableCredits(BigDecimal.ZERO)
