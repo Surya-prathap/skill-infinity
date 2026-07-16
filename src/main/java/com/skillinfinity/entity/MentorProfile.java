@@ -34,6 +34,9 @@ public class MentorProfile {
     private Integer totalCommunitySessions = 0;
 
     @Builder.Default
+    private Integer totalReviews = 0;
+
+    @Builder.Default
     private Double averageRating = 0.0;
 
     @Enumerated(EnumType.STRING)
@@ -45,4 +48,5 @@ public class MentorProfile {
 
     @Builder.Default
     private boolean verifiedMentor = false;
+
 }
