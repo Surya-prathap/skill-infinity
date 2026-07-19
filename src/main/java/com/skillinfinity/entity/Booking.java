@@ -1,6 +1,7 @@
 package com.skillinfinity.entity;
 
 import com.skillinfinity.enums.BookingStatus;
+import com.skillinfinity.enums.ContributionMode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -60,6 +61,10 @@ public class Booking {
     @Builder.Default
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal learningCreditsUsed = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ContributionMode contributionMode;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default

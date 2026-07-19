@@ -1,5 +1,6 @@
 package com.skillinfinity.dto.response;
 
+import com.skillinfinity.enums.MentorStatus;
 import lombok.*;
 
 import java.util.List;
@@ -26,4 +27,25 @@ public class MentorProfileResponseDTO {
     private String profileImageUrl;
 
     private List<String> teachingSkills;
+
+    // Community & Professional Mentor Details
+    private boolean communityContributionEnabled;
+
+    private boolean professionalSessionsEnabled;
+
+    private Integer contributionScore;
+
+    private Integer totalCommunitySessions;
+
+    // Review Details
+    private Integer totalReviews;
+
+    private Double averageRating;
+
+    // Mentor Status
+    private MentorStatus mentorStatus;
+
+    private boolean mentorPro;
+
+    private boolean verifiedMentor;
 }

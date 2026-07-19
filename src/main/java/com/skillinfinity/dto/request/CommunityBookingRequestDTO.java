@@ -1,6 +1,5 @@
 package com.skillinfinity.dto.request;
 
-import com.skillinfinity.enums.ContributionMode;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -12,7 +11,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookingRequestDTO {
+public class CommunityBookingRequestDTO {
 
     @NotNull
     private Long mentorId;
@@ -25,10 +24,4 @@ public class BookingRequestDTO {
 
     @NotNull
     private LocalTime startTime;
-
-    @NotNull
-    private Integer duration;
-
-    @NotNull
-    private ContributionMode contributionMode;
 }

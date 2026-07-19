@@ -2,6 +2,8 @@ package com.skillinfinity.controller;
 
 import com.skillinfinity.dto.common.ApiResponse;
 import com.skillinfinity.dto.request.BookingRequestDTO;
+import com.skillinfinity.dto.request.CommunityBookingRequestDTO;
+import com.skillinfinity.dto.request.ProfessionalBookingRequestDTO;
 import com.skillinfinity.dto.response.BookingResponseDTO;
 import com.skillinfinity.service.BookingService;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +19,21 @@ public class BookingController {
 
     private final BookingService bookingService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<BookingResponseDTO>> bookSession(
-            @RequestBody BookingRequestDTO requestDTO) {
+    @PostMapping("/community")
+    public ResponseEntity<ApiResponse<BookingResponseDTO>> bookCommunitySession(
+            @RequestBody CommunityBookingRequestDTO requestDTO) {
 
         return ResponseEntity.ok(
-                bookingService.bookSession(requestDTO)
+                bookingService.bookCommunitySession(requestDTO)
+        );
+    }
+
+    @PostMapping("/professional")
+    public ResponseEntity<ApiResponse<BookingResponseDTO>> bookProfessionalSession(
+            @RequestBody ProfessionalBookingRequestDTO requestDTO) {
+
+        return ResponseEntity.ok(
+                bookingService.bookProfessionalSession(requestDTO)
         );
     }
 

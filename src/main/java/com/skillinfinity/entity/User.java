@@ -1,5 +1,6 @@
 package com.skillinfinity.entity;
 
+import com.skillinfinity.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +42,10 @@ public class User {
     @Size(max = 500, message = "Bio cannot exceed 500 characters")
     @Column(length = 500)
     private String bio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
     @Column(length = 500)
     private String profileImageUrl;

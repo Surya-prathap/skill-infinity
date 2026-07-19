@@ -2,7 +2,8 @@ package com.skillinfinity.service.impl;
 
 import com.skillinfinity.dto.common.ApiResponse;
 import com.skillinfinity.dto.common.CreditDeductionResult;
-import com.skillinfinity.dto.request.BookingRequestDTO;
+import com.skillinfinity.dto.request.CommunityBookingRequestDTO;
+import com.skillinfinity.dto.request.ProfessionalBookingRequestDTO;
 import com.skillinfinity.dto.response.BookingResponseDTO;
 import com.skillinfinity.entity.*;
 import com.skillinfinity.enums.*;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -34,8 +36,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     @Override
-    public ApiResponse<BookingResponseDTO> bookSession(
-            BookingRequestDTO requestDTO) {
+    public ApiResponse<BookingResponseDTO> bookCommunitySession(
+            CommunityBookingRequestDTO requestDTO) {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
@@ -45,94 +47,30 @@ public class BookingServiceImpl implements BookingService {
         User learner = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found."));
+        User mentor = getValidatedMentor(requestDTO.getMentorId(), learner);
 
-        User mentor = userRepository.findById(requestDTO.getMentorId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Mentor not found."));
-
-        if (learner.getId().equals(mentor.getId())) {
-            throw new IllegalArgumentException(
-                    "You cannot book your own session.");
-        }
-
-        Skill skill = skillRepository.findById(requestDTO.getSkillId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Skill not found."));
-
-        UserSkill userSkill = userSkillRepository
-                .findByUserAndSkillAndSkillType(
-                        mentor,
-                        skill,
-                        SkillType.TEACH
-                )
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Selected mentor does not teach this skill."));
-
-        List<Availability> availabilitySlots =
-                availabilityRepository.findByMentorAndDate(
-                        mentor,
-                        requestDTO.getDate()
-                );
-
-        if (availabilitySlots.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Mentor is not available on the selected date.");
-        }
+        Skill skill = getValidatedSkill(requestDTO.getSkillId(), mentor);
 
         LocalTime endTime = requestDTO.getStartTime()
-                .plusMinutes(requestDTO.getDuration());
+                .plusMinutes(30);
 
-        boolean fitsAvailability = availabilitySlots.stream()
-                .anyMatch(slot ->
-                        !requestDTO.getStartTime().isBefore(slot.getStartTime()) &&
-                                !endTime.isAfter(slot.getEndTime())
-                );
+        validateAvailability(
+                mentor,
+                requestDTO.getDate(),
+                requestDTO.getStartTime(),
+                endTime
+        );
 
-        if (!fitsAvailability) {
-            throw new IllegalArgumentException(
-                    "Selected time is outside mentor availability.");
-        }
+        validateBookingConflict(
+                mentor,
+                requestDTO.getDate(),
+                requestDTO.getStartTime(),
+                endTime
+        );
 
-        List<Booking> existingBookings =
-                bookingRepository.findByMentorAndDateAndStatus(
-                        mentor,
-                        requestDTO.getDate(),
-                        BookingStatus.BOOKED
-                );
+        BigDecimal creditsUsed = BigDecimal.ONE;
 
-        boolean hasConflict = existingBookings.stream()
-                .anyMatch(booking ->
-                        requestDTO.getStartTime().isBefore(booking.getEndTime()) &&
-                                endTime.isAfter(booking.getStartTime())
-                );
-
-        if (hasConflict) {
-            throw new IllegalArgumentException(
-                    "Selected time slot is already booked.");
-        }
-
-        if (requestDTO.getDuration() < 10 ||
-                requestDTO.getDuration() % 5 != 0) {
-
-            throw new IllegalArgumentException(
-                    "Duration must be at least 10 minutes and in 5-minute increments.");
-        }
-
-        BigDecimal creditsUsed = BigDecimal.valueOf(requestDTO.getDuration())
-                .divide(BigDecimal.TEN);
-
-        Wallet wallet = walletRepository.findByUser(learner)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Wallet not found."));
-
-        BigDecimal availableCredits = wallet.getWelcomeCredits()
-                .add(wallet.getPurchasedCredits())
-                .add(wallet.getLearningCredits());
-
-        if (availableCredits.compareTo(creditsUsed) < 0) {
-            throw new IllegalArgumentException("Insufficient available credits.");
-        }
+        Wallet wallet = getValidatedWallet(learner, creditsUsed);
 
         CreditDeductionResult deductionResult =
                 deductCredits(wallet, creditsUsed);
@@ -160,6 +98,7 @@ public class BookingServiceImpl implements BookingService {
                 .learningCreditsUsed(
                         deductionResult.getLearningCreditsUsed()
                 )
+                .contributionMode(ContributionMode.COMMUNITY)
                 .build();
 
         booking = bookingRepository.save(booking);
@@ -212,13 +151,133 @@ public class BookingServiceImpl implements BookingService {
                 .date(booking.getDate())
                 .startTime(booking.getStartTime())
                 .endTime(booking.getEndTime())
-                .duration(requestDTO.getDuration())
+                .duration(30)
                 .creditsUsed(booking.getCreditsUsed())
                 .status(booking.getStatus())
                 .build();
 
         return ApiResponse.success(
                 "Session booked successfully.",
+                responseDTO
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<BookingResponseDTO> bookProfessionalSession(
+            ProfessionalBookingRequestDTO requestDTO) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User learner = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found."));
+
+        User mentor = getValidatedMentor(
+                requestDTO.getMentorId(),
+                learner);
+
+        Skill skill = getValidatedSkill(
+                requestDTO.getSkillId(),
+                mentor);
+
+        if (requestDTO.getDuration() < 10) {
+            throw new IllegalArgumentException(
+                    "Minimum session duration is 10 minutes.");
+        }
+
+        if (requestDTO.getDuration() % 5 != 0) {
+            throw new IllegalArgumentException(
+                    "Session duration must be a multiple of 5 minutes.");
+        }
+
+        LocalTime endTime = requestDTO.getStartTime()
+                .plusMinutes(requestDTO.getDuration());
+
+        validateAvailability(
+                mentor,
+                requestDTO.getDate(),
+                requestDTO.getStartTime(),
+                endTime
+        );
+
+        validateBookingConflict(
+                mentor,
+                requestDTO.getDate(),
+                requestDTO.getStartTime(),
+                endTime
+        );
+
+        BigDecimal creditsUsed = BigDecimal.valueOf(requestDTO.getDuration())
+                .divide(BigDecimal.TEN);
+
+        Wallet wallet = getValidatedPurchasedWallet(
+                learner,
+                creditsUsed
+        );
+
+        CreditDeductionResult deductionResult =
+                deductPurchasedCredits(
+                        wallet,
+                        creditsUsed
+                );
+
+        walletRepository.save(wallet);
+
+        String bookingReference =
+                "SI-" + System.currentTimeMillis();
+
+        Booking booking = Booking.builder()
+                .bookingReference(bookingReference)
+                .mentor(mentor)
+                .learner(learner)
+                .skill(skill)
+                .date(requestDTO.getDate())
+                .startTime(requestDTO.getStartTime())
+                .endTime(endTime)
+                .creditsUsed(creditsUsed)
+                .purchasedCreditsUsed(
+                        deductionResult.getPurchasedCreditsUsed()
+                )
+                .welcomeCreditsUsed(
+                        deductionResult.getWelcomeCreditsUsed()
+                )
+                .learningCreditsUsed(
+                        deductionResult.getLearningCreditsUsed()
+                )
+                .contributionMode(ContributionMode.PROFESSIONAL)
+                .build();
+
+        booking = bookingRepository.save(booking);
+
+        walletTransactionService.createTransaction(
+                learner,
+                TransactionType.DEBIT,
+                TransactionCategory.BOOKING,
+                CreditType.PURCHASED,
+                deductionResult.getPurchasedCreditsUsed(),
+                booking.getBookingReference()
+        );
+
+        BookingResponseDTO responseDTO = BookingResponseDTO.builder()
+                .bookingId(booking.getId())
+                .bookingReference(booking.getBookingReference())
+                .mentorName(mentor.getFullName())
+                .learnerName(learner.getFullName())
+                .skillName(skill.getSkillName())
+                .date(booking.getDate())
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
+                .duration(requestDTO.getDuration())
+                .creditsUsed(booking.getCreditsUsed())
+                .status(booking.getStatus())
+                .build();
+
+        return ApiResponse.success(
+                "Professional session booked successfully.",
                 responseDTO
         );
     }
@@ -575,5 +634,139 @@ public class BookingServiceImpl implements BookingService {
         return result;
     }
 
+    private User getValidatedMentor(Long mentorId, User learner) {
 
+        User mentor = userRepository.findById(mentorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Mentor not found."));
+
+        if (learner.getId().equals(mentor.getId())) {
+            throw new IllegalArgumentException(
+                    "You cannot book your own session.");
+        }
+
+        return mentor;
+    }
+
+    private Skill getValidatedSkill(Long skillId, User mentor){
+
+        Skill skill = skillRepository.findById(skillId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Skill not found."));
+
+        UserSkill userSkill = userSkillRepository
+                .findByUserAndSkillAndSkillType(
+                        mentor,
+                        skill,
+                        SkillType.TEACH
+                )
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Selected mentor does not teach this skill."));
+        return skill;
+    }
+
+    private void validateAvailability(
+            User mentor,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime) {
+
+        List<Availability> availabilitySlots =
+                availabilityRepository.findByMentorAndDate(
+                        mentor,
+                        date
+                );
+
+        if (availabilitySlots.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Mentor is not available on the selected date.");
+        }
+
+        boolean fitsAvailability = availabilitySlots.stream()
+                .anyMatch(slot ->
+                        !startTime.isBefore(slot.getStartTime()) &&
+                                !endTime.isAfter(slot.getEndTime())
+                );
+
+        if (!fitsAvailability) {
+            throw new IllegalArgumentException(
+                    "Selected time is outside mentor availability.");
+        }
+    }
+
+    private void validateBookingConflict(
+            User mentor,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime) {
+
+        List<Booking> existingBookings =
+                bookingRepository.findByMentorAndDateAndStatus(
+                        mentor,
+                        date,
+                        BookingStatus.BOOKED
+                );
+
+        boolean hasConflict = existingBookings.stream()
+                .anyMatch(booking ->
+                        startTime.isBefore(booking.getEndTime()) &&
+                                endTime.isAfter(booking.getStartTime())
+                );
+
+        if (hasConflict) {
+            throw new IllegalArgumentException(
+                    "Selected time slot is already booked.");
+        }
+    }
+
+    private Wallet getValidatedWallet(
+            User learner,
+            BigDecimal creditsRequired) {
+
+        Wallet wallet = walletRepository.findByUser(learner)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Wallet not found."));
+
+        BigDecimal availableCredits = wallet.getWelcomeCredits()
+                .add(wallet.getPurchasedCredits())
+                .add(wallet.getLearningCredits());
+
+        if (availableCredits.compareTo(creditsRequired) < 0) {
+            throw new IllegalArgumentException("Insufficient available credits.");
+        }
+
+        return wallet;
+    }
+
+    private Wallet getValidatedPurchasedWallet(
+            User learner,
+            BigDecimal creditsRequired) {
+
+        Wallet wallet = walletRepository.findByUser(learner)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Wallet not found."));
+
+        if (wallet.getPurchasedCredits().compareTo(creditsRequired) < 0) {
+            throw new IllegalArgumentException(
+                    "Insufficient purchased credits.");
+        }
+
+        return wallet;
+    }
+
+    private CreditDeductionResult deductPurchasedCredits(
+            Wallet wallet,
+            BigDecimal creditsRequired) {
+
+        wallet.setPurchasedCredits(
+                wallet.getPurchasedCredits().subtract(creditsRequired)
+        );
+
+        return CreditDeductionResult.builder()
+                .purchasedCreditsUsed(creditsRequired)
+                .welcomeCreditsUsed(BigDecimal.ZERO)
+                .learningCreditsUsed(BigDecimal.ZERO)
+                .build();
+    }
 }

@@ -43,12 +43,32 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login")
-                        .permitAll()
+
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login"
+                        ).permitAll()
+
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/withdrawals/**")
+                        .hasRole("MENTOR")
+
+                        .requestMatchers("/api/availability/**")
+                        .hasRole("MENTOR")
+
+                        .requestMatchers("/api/wallet/**")
+                        .hasAnyRole("USER", "MENTOR")
+
+                        .requestMatchers("/api/bookings/**")
+                        .hasAnyRole("USER", "MENTOR")
+
                         .anyRequest()
                         .authenticated())
 
-                .addFilterBefore(jwtAuthenticationFilter,
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class)
 
                 .httpBasic(Customizer.withDefaults());

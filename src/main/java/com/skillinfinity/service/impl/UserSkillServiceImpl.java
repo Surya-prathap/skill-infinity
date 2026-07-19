@@ -7,6 +7,7 @@ import com.skillinfinity.entity.MentorProfile;
 import com.skillinfinity.entity.Skill;
 import com.skillinfinity.entity.User;
 import com.skillinfinity.entity.UserSkill;
+import com.skillinfinity.enums.Role;
 import com.skillinfinity.enums.SkillType;
 import com.skillinfinity.exception.InvalidRequestException;
 import com.skillinfinity.exception.ResourceAlreadyExistsException;
@@ -76,6 +77,9 @@ public class UserSkillServiceImpl implements UserSkillService {
                         .build();
 
                 mentorProfileRepository.save(mentorProfile);
+
+                user.setRole(Role.MENTOR);
+                userRepository.save(user);
             }
         }
 
